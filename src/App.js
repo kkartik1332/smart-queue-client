@@ -258,13 +258,15 @@ export default function App() {
                     ) : (
                       <div className="serving-empty">No one being served yet</div>
                     )}
-                    <button
-                      className="btn-next"
-                      style={{ background: cfg.color }}
-                      onClick={() => callNext(s)}
-                    >
-                      Call Next <ChevronRight size={16} />
-                    </button>
+                    {isAdmin && (
+                      <button
+                        className="btn-next"
+                        style={{ background: cfg.color }}
+                        onClick={() => callNext(s)}
+                      >
+                        Call Next <ChevronRight size={16} />
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -311,13 +313,15 @@ export default function App() {
                                 <Clock size={14} /> {waitTime(entry.position)} wait
                               </div>
                             </div>
-                            <button
-                              className="btn-delete"
-                              onClick={() => cancelEntry(entry._id)}
-                              title="Cancel"
-                            >
-                              <Trash2 size={18} />
-                            </button>
+                            {(isAdmin || entry._id === joinedId) && (
+                              <button
+                                className="btn-delete"
+                                onClick={() => cancelEntry(entry._id)}
+                                title="Cancel"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            )}
                           </motion.div>
                         ))}
                       </AnimatePresence>
