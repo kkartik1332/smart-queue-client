@@ -313,7 +313,7 @@ export default function App() {
                                 <Clock size={14} /> {waitTime(entry.position)} wait
                               </div>
                             </div>
-                            {(isAdmin || entry._id === joinedId) && (
+                            {isAdmin && (
                               <button
                                 className="btn-delete"
                                 onClick={() => cancelEntry(entry._id)}
