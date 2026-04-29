@@ -21,6 +21,23 @@ const styles = {
   ticketNumber: {
     fontSize: 48, fontWeight: 800,
     letterSpacing: 4, margin: '8px 0'
+  },
+  modalOverlay: {
+    position: 'fixed',
+    top: 0, left: 0,
+    width: '100%', height: '100%',
+    background: 'rgba(0,0,0,0.5)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+  },
+  modalCard: {
+    background: '#fff',
+    borderRadius: 16,
+    padding: 28,
+    width: 320,
+    boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
   }
 };
 
@@ -38,18 +55,22 @@ export default function App() {
   const [myTicket, setMyTicket] = useState(null);
   const [password, setPassword] = useState('');
 
+  
   const login = async () => {
-    try {
-      const { data } = await axios.post(
-        `${API_BASE_URL}/api/auth/login`,
-        { password }
-      );
-      localStorage.setItem('token', data.token);
-      setIsAdmin(true);
-    } catch (error) {
-      alert('Wrong password!');
-    }
-  };
+  try {
+    const { data } = await axios.post(
+      'https://smart-queue-server-aimx.onrender.com/api/auth/login',
+      { password }
+    );
+    localStorage.setItem('token', data.token);
+    setIsAdmin(true);
+    setShowLogin(false);
+    setPassword('');
+  } catch {
+    alert('Wrong password!');
+    setPassword('');
+  }
+};
   const [queues, setQueues] = useState({});
   const [name, setName] = useState('');
   const [service, setService] = useState('Doctor');
@@ -137,25 +158,53 @@ export default function App() {
             </div>
             <span className="logo-text">SmartQueue</span>
           </div>
-          <span className="header-sub">Real-time Queue Management</span>
+          <div style={{display:'flex', alignItems:'center', gap:12}}>
+  <span style={styles.headerSub}>
+    Real-time Queue Management
+  </span>
+  {!isAdmin ? (
+    <button
+      onClick={() => setShowLogin(true)}
+      style={{
+        background: 'rgba(255,255,255,0.1)',
+        border: 'none',
+        color: 'rgba(255,255,255,0.3)',
+        padding: '6px 10px',
+        borderRadius: 8,
+        cursor: 'pointer',
+        fontSize: 18
+      }}
+      title="Staff Login"
+    >
+      ⚙️
+    </button>
+  ) : (
+    <button
+      onClick={() => {
+        setIsAdmin(false);
+        localStorage.removeItem('token');
+      }}
+      style={{
+        background: 'rgba(255,255,255,0.2)',
+        border: 'none',
+        color: '#fff',
+        padding: '6px 14px',
+        borderRadius: 8,
+        cursor: 'pointer',
+        fontSize: 13,
+        fontWeight: 600
+      }}
+    >
+      🔓 Logout
+    </button>
+  )}
+</div>
         </div>
       </header>
 
       <main className="main-container">
-        {!isAdmin && (
-          <div style={{ ...styles.card, marginBottom: 12, display: 'flex', gap: 10 }}>
-            <input
-              placeholder="Admin password"
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              style={styles.input}
-            />
-            <button style={styles.btn} onClick={login}>
-              Login as Admin
-            </button>
-          </div>
-        )}
+        
+        
         {/* Join Card */}
         <div className="glass-card">
           <h2 className="card-title">Join a Queue</h2>
