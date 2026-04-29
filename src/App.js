@@ -3,6 +3,7 @@ import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Clock, ChevronRight, Trash2, Loader2, CheckCircle } from 'lucide-react';
 import { io } from 'socket.io-client';
+import './App.css';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-queue-server-aimx.onrender.com';
 const API = `${API_BASE_URL}/api/queue`;
