@@ -4,8 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Clock, ChevronRight, Trash2, Loader2, CheckCircle } from 'lucide-react';
 import { io } from 'socket.io-client';
 
-const API = 'https://smart-queue-server-aimx.onrender.com/api/queue';
-const socket = io('https://smart-queue-server-aimx.onrender.com');
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-queue-server-aimx.onrender.com';
+const API = `${API_BASE_URL}/api/queue`;
+const socket = io(API_BASE_URL);
 const styles = {
   card: { padding: 20, background: 'white', borderRadius: 16, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' },
   input: { padding: '10px 16px', borderRadius: 8, border: '1px solid #e2e8f0', flex: 1 },
@@ -44,7 +45,7 @@ export default function App() {
       );
       localStorage.setItem('token', data.token);
       setIsAdmin(true);
-    } catch {
+    } catch (error) {
       alert('Wrong password!');
     }
   };
