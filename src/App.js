@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Clock, ChevronRight, Trash2, Loader2, CheckCircle } from 'lucide-react';
 import { io } from 'socket.io-client';
 import './App.css';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import DisplayScreen from './DisplayScreen';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-queue-server-aimx.onrender.com';
 const API = `${API_BASE_URL}/api/queue`;
@@ -50,7 +52,7 @@ const SERVICE_CONFIG = {
 
 const WAIT_PER_PERSON = 5; // minutes
 
-export default function App() {
+function MainApp() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [showLogout, setShowLogout] = useState(false);
@@ -454,5 +456,16 @@ export default function App() {
         </AnimatePresence>
       </main>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<MainApp />} />
+        <Route path="/display" element={<DisplayScreen />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
