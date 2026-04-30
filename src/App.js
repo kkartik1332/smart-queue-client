@@ -52,6 +52,7 @@ const WAIT_PER_PERSON = 5; // minutes
 
 export default function App() {
   const [isAdmin, setIsAdmin] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
   const [myTicket, setMyTicket] = useState(null);
   const [password, setPassword] = useState('');
 
@@ -159,6 +160,43 @@ export default function App() {
             <span className="logo-text">SmartQueue</span>
           </div>
           <div style={{display:'flex', alignItems:'center', gap:12}}>
+          {/* Admin Login Popup */}
+{showLogin && (
+  <div style={styles.modalOverlay}>
+    <div style={styles.modalCard}>
+      <h3 style={{marginBottom: 16, fontSize: 18, fontWeight: 700}}>
+        🔐 Staff Login
+      </h3>
+      <input
+        type="password"
+        placeholder="Enter staff password"
+        value={password}
+        onChange={e => setPassword(e.target.value)}
+        onKeyDown={e => e.key === 'Enter' && login()}
+        style={{...styles.input, marginBottom: 12, width: '100%'}}
+      />
+      <div style={{display:'flex', gap:8}}>
+        <button
+          style={{...styles.btn, flex:1}}
+          onClick={login}
+        >
+          Login
+        </button>
+        <button
+          onClick={() => setShowLogin(false)}
+          style={{
+            flex:1, padding:'10px 20px',
+            background:'#f3f4f6',
+            border:'none', borderRadius:10,
+            cursor:'pointer', fontWeight:600
+          }}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+)}
   <span style={styles.headerSub}>
     Real-time Queue Management
   </span>
