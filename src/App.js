@@ -53,6 +53,7 @@ const WAIT_PER_PERSON = 5; // minutes
 export default function App() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  const [showLogout, setShowLogout] = useState(false);
   const [myTicket, setMyTicket] = useState(null);
   const [password, setPassword] = useState('');
 
@@ -160,6 +161,41 @@ export default function App() {
             <span className="logo-text">SmartQueue</span>
           </div>
           <div style={{display:'flex', alignItems:'center', gap:12}}>
+            {showLogout && (
+  <div style={styles.modalOverlay}>
+    <div style={styles.modalCard}>
+      <h3 style={{marginBottom: 8, fontSize: 18, fontWeight: 700}}>
+        🔓 Logout
+      </h3>
+      <p style={{marginBottom: 20, color: '#6b7280', fontSize: 14}}>
+        Are you sure you want to logout?
+      </p>
+      <div style={{display:'flex', gap:8}}>
+        <button
+          style={{...styles.btn, flex:1, background:'#ef4444'}}
+          onClick={() => {
+            setIsAdmin(false);
+            localStorage.removeItem('token');
+            setShowLogout(false);
+          }}
+        >
+          Yes Logout
+        </button>
+        <button
+          onClick={() => setShowLogout(false)}
+          style={{
+            flex:1, padding:'10px 20px',
+            background:'#f3f4f6',
+            border:'none', borderRadius:10,
+            cursor:'pointer', fontWeight:600
+          }}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+)}
           {/* Admin Login Popup */}
 {showLogin && (
   <div style={styles.modalOverlay}>
@@ -218,10 +254,7 @@ export default function App() {
     </button>
   ) : (
     <button
-      onClick={() => {
-        setIsAdmin(false);
-        localStorage.removeItem('token');
-      }}
+      onClick={() => setShowLogout(true)}
       style={{
         background: 'rgba(255,255,255,0.2)',
         border: 'none',
