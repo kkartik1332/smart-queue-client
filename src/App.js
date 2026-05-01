@@ -139,9 +139,18 @@ useEffect(() => {
     }
   };
   const toggleAvailability = async (svc) => {
-  const newValue = !availability[svc];
-  await axios.post(`${API}/availability`, { service: svc, value: newValue });
-};
+    const newValue = !availability[svc];
+    try {
+      await axios.post(`${API}/availability`, { service: svc, value: newValue });
+      setAvailability(prev => ({
+        ...prev,
+        [svc]: newValue
+      }));
+    } catch (err) {
+      console.error(err);
+      alert('Failed to update availability');
+    }
+  };
   const playBeep = () => {
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   const oscillator = audioCtx.createOscillator();
