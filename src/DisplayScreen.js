@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
-const [availability, setAvailability] = useState({
-  Doctor: true, Bank: true, Pharmacy: true, General: true,
-});
 
 const API = 'https://smart-queue-server-aimx.onrender.com/api/queue';
 const socket = io('https://smart-queue-server-aimx.onrender.com');
 
 export default function DisplayScreen() {
+  const [availability, setAvailability] = useState({
+    Doctor: true, Bank: true, Pharmacy: true, General: true,
+  });
   const [serving, setServing] = useState({});
   const [queues, setQueues] = useState({});
   const [time, setTime] = useState(new Date());
