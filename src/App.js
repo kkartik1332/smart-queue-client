@@ -85,11 +85,13 @@ function MainApp() {
   const [activeTab, setActiveTab] = useState('Doctor');
 
 const [availability, setAvailability] = useState({
-  Doctor: true,
-  Bank: true,
-  Pharmacy: true,
-  General: true,
+  Doctor: true, Bank: true, Pharmacy: true, General: true,
 });
+
+useEffect(() => {
+  axios.get(`${API}/availability`).then(({ data }) => setAvailability(data));
+  socket.on('availability_updated', (data) => setAvailability(data));
+  return () => socket.off('availability_updated');}, []);
   const fetchQueue = useCallback(async () => {
     try {
       const { data } = await axios.get(API);
@@ -136,8 +138,9 @@ const [availability, setAvailability] = useState({
       setLoading(false);
     }
   };
-  const toggleAvailability = (svc) => {
-  setAvailability(prev => ({ ...prev, [svc]: !prev[svc] }));
+  const toggleAvailability = async (svc) => {
+  const newValue = !availability[svc];
+  await axios.post(`${API}/availability`, { service: svc, value: newValue });
 };
   const playBeep = () => {
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();

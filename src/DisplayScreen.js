@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
+const [availability, setAvailability] = useState({
+  Doctor: true, Bank: true, Pharmacy: true, General: true,
+});
 
 const API = 'https://smart-queue-server-aimx.onrender.com/api/queue';
 const socket = io('https://smart-queue-server-aimx.onrender.com');
@@ -35,11 +38,14 @@ export default function DisplayScreen() {
   };
 
   useEffect(() => {
+    axios.get(`${API}/availability`).then(({ data }) => setAvailability(data));
+socket.on('availability_updated', (data) => setAvailability(data));
     fetchQueue();
     socket.on('queue_updated', fetchQueue);
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => {
       socket.off('queue_updated', fetchQueue);
+      socket.off('availability_updated');
       clearInterval(timer);
     };
   }, []);
@@ -83,15 +89,15 @@ export default function DisplayScreen() {
               </div>
 
               <div style={styles.nowServingLabel}>
-                NOW SERVING
-              </div>
+  {availability[s] ? 'NOW SERVING' : '🔴 UNAVAILABLE'}
+</div>
 
-              <div style={{
-                ...styles.tokenNumber,
-                color: cfg.color
-              }}>
-                {nowServing ? nowServing.ticketNo || '---' : '---'}
-              </div>
+             <div style={{
+  ...styles.tokenNumber,
+  color: availability[s] ? cfg.color : '#ef4444'
+}}>
+  {availability[s] ? (nowServing ? nowServing.ticketNo || '---' : '---') : '---'}
+</div>
 
               <div style={styles.patientName}>
                 {nowServing ? nowServing.name : 'No one yet'}
