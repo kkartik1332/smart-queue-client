@@ -481,4 +481,8 @@ body {
     flex-direction: column;
     align-items: stretch;
   }
+  .tab-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  }
 }

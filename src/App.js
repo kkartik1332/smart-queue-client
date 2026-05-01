@@ -59,6 +59,7 @@ function MainApp() {
   const [myTicket, setMyTicket] = useState(null);
   const [password, setPassword] = useState('');
 
+
   
   const login = async () => {
   try {
@@ -83,6 +84,12 @@ function MainApp() {
   const [joinedId, setJoinedId] = useState(null);
   const [activeTab, setActiveTab] = useState('Doctor');
 
+const [availability, setAvailability] = useState({
+  Doctor: true,
+  Bank: true,
+  Pharmacy: true,
+  General: true,
+});
   const fetchQueue = useCallback(async () => {
     try {
       const { data } = await axios.get(API);
@@ -129,6 +136,9 @@ function MainApp() {
       setLoading(false);
     }
   };
+  const toggleAvailability = (svc) => {
+  setAvailability(prev => ({ ...prev, [svc]: !prev[svc] }));
+};
   const playBeep = () => {
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   const oscillator = audioCtx.createOscillator();
@@ -316,12 +326,13 @@ function MainApp() {
               ))}
             </select>
             <button
-              className="btn-primary"
-              onClick={joinQueue}
-              disabled={loading}
-            >
-              {loading ? <Loader2 size={20} style={{ animation: 'spin 1s linear infinite' }} /> : 'Join Queue'}
-            </button>
+  className="btn-primary"
+  onClick={joinQueue}
+  disabled={loading || !availability[service]}
+>
+  {loading ? <Loader2 size={20} style={{ animation: 'spin 1s linear infinite' }} /> 
+  : !availability[service] ? '🔴 Unavailable' : 'Join Queue'}
+</button>
           </div>
           <AnimatePresence>
             {joinedId && (
@@ -355,7 +366,7 @@ function MainApp() {
               <button
                 key={s}
                 onClick={() => setActiveTab(s)}
-                className={`tab-btn ${isActive ? 'active' : ''}`}
+                className={`tab-btn ${isActive ? 'active' : ''} ${!availability[s] ? 'tab-disabled' : ''}`}
                 style={isActive ? { color: cfg.color } : {}}
               >
                 {cfg.emoji} {s}
@@ -397,15 +408,31 @@ function MainApp() {
                     ) : (
                       <div className="serving-empty">No one being served yet</div>
                     )}
-                    {isAdmin && (
-                      <button
-                        className="btn-next"
-                        style={{ background: cfg.color }}
-                        onClick={() => callNext(s)}
-                      >
-                        Call Next <ChevronRight size={16} />
-                      </button>
-                    )}
+                   {isAdmin && (
+  <div style={{ display: 'flex', gap: 8 }}>
+    <button
+      className="btn-next"
+      style={{ background: cfg.color }}
+      onClick={() => callNext(s)}
+    >
+      Call Next <ChevronRight size={16} />
+    </button>
+    <button
+      onClick={() => toggleAvailability(s)}
+      style={{
+        padding: '8px 14px',
+        borderRadius: 8,
+        border: 'none',
+        cursor: 'pointer',
+        fontWeight: 600,
+        background: availability[s] ? '#fee2e2' : '#dcfce7',
+        color: availability[s] ? '#ef4444' : '#16a34a',
+      }}
+    >
+      {availability[s] ? '🔴 Mark Unavailable' : '🟢 Mark Available'}
+    </button>
+  </div>
+)}
                   </div>
                 </div>
 
