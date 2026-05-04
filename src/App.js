@@ -239,8 +239,15 @@ useEffect(() => {
      <button
   style={{ ...styles.btn, width: '100%', marginTop: 8 }}
   onClick={async () => {
-    await axios.post(`${API}/waittimes`, { waitTimes });
-    setShowWaitEditor(false);
+    console.log('Save clicked');
+    console.log('waitTimes:', waitTimes);
+    try {
+      const res = await axios.post(`${API}/waittimes`, { waitTimes });
+      console.log('Response:', res.data);
+      setShowWaitEditor(false);
+    } catch (err) {
+      console.error('Error:', err.message);
+    }
   }}
 >
   Save ✅
