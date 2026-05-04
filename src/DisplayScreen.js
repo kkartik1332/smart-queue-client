@@ -12,6 +12,9 @@ export default function DisplayScreen() {
   const [serving, setServing] = useState({});
   const [queues, setQueues] = useState({});
   const [time, setTime] = useState(new Date());
+  const [waitTimes, setWaitTimes] = useState({
+  Doctor: 5, Bank: 5, Pharmacy: 5, General: 5,
+});
 
   const fetchQueue = async () => {
     try {
@@ -37,18 +40,21 @@ export default function DisplayScreen() {
     }
   };
 
-  useEffect(() => {
-    axios.get(`${API}/availability`).then(({ data }) => setAvailability(data));
-socket.on('availability_updated', (data) => setAvailability(data));
-    fetchQueue();
-    socket.on('queue_updated', fetchQueue);
-    const timer = setInterval(() => setTime(new Date()), 1000);
-    return () => {
-      socket.off('queue_updated', fetchQueue);
-      socket.off('availability_updated');
-      clearInterval(timer);
-    };
-  }, []);
+ useEffect(() => {
+  fetchQueue();
+  socket.on('queue_updated', fetchQueue);
+  axios.get(`${API}/availability`).then(({ data }) => setAvailability(data));
+  socket.on('availability_updated', (data) => setAvailability(data));
+  axios.get(`${API}/waittimes`).then(({ data }) => setWaitTimes(data));
+  socket.on('waittimes_updated', (data) => setWaitTimes(data));
+  const timer = setInterval(() => setTime(new Date()), 1000);
+  return () => {
+    socket.off('queue_updated', fetchQueue);
+    socket.off('availability_updated');
+    socket.off('waittimes_updated');
+    clearInterval(timer);
+  };
+}, []);
 
   const SERVICE_CONFIG = {
     Doctor:   { color: '#6366f1', emoji: '🩺' },
@@ -104,11 +110,14 @@ socket.on('availability_updated', (data) => setAvailability(data));
               </div>
 
               <div style={{
-                ...styles.waitingBadge,
-                background: cfg.color
-              }}>
-                {waiting} waiting
-              </div>
+  ...styles.waitingBadge,
+  background: cfg.color
+}}>
+  {waiting} waiting
+</div>
+<div style={{ fontSize: 14, color: '#94a3b8', marginTop: 4 }}>
+  ⏱️ ~{waiting * (waitTimes[s] || 5)} min total wait
+</div>
             </div>
           );
         })}

@@ -87,11 +87,20 @@ function MainApp() {
 const [availability, setAvailability] = useState({
   Doctor: true, Bank: true, Pharmacy: true, General: true,
 });
-
+const [waitTimes, setWaitTimes] = useState({
+  Doctor: 5, Bank: 5, Pharmacy: 5, General: 5,
+});
+const [showWaitEditor, setShowWaitEditor] = useState(false);
 useEffect(() => {
   axios.get(`${API}/availability`).then(({ data }) => setAvailability(data));
+  axios.get(`${API}/waittimes`).then(({ data }) => setWaitTimes(data));
   socket.on('availability_updated', (data) => setAvailability(data));
-  return () => socket.off('availability_updated');}, []);
+  socket.on('waittimes_updated', (data) => setWaitTimes(data));
+  return () => {
+    socket.off('availability_updated');
+    socket.off('waittimes_updated');
+  };
+}, []);
   const fetchQueue = useCallback(async () => {
     try {
       const { data } = await axios.get(API);
@@ -188,7 +197,7 @@ useEffect(() => {
     }
   };
 
-  const waitTime = (position) => `~${(position - 1) * WAIT_PER_PERSON} min`;
+  const waitTime = (position, svc) => `~${(position - 1) * (waitTimes[svc] || 5)} min`;
 
   return (
     <div className="page-container">
@@ -202,6 +211,43 @@ useEffect(() => {
             <span className="logo-text">SmartQueue</span>
           </div>
           <div style={{display:'flex', alignItems:'center', gap:12}}>
+            {showWaitEditor && (
+  <div style={styles.modalOverlay}>
+    <div style={styles.modalCard}>
+      <h3 style={{ marginBottom: 16, fontSize: 18, fontWeight: 700 }}>
+        ⏱️ Set Wait Time Per Person
+      </h3>
+      {Object.keys(SERVICE_CONFIG).map(svc => (
+        <div key={svc} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+          <span style={{ width: 90, fontWeight: 600 }}>
+            {SERVICE_CONFIG[svc].emoji} {svc}
+          </span>
+          <input
+            type="number"
+            min={1}
+            max={60}
+            value={waitTimes[svc]}
+            onChange={e => setWaitTimes(prev => ({
+              ...prev,
+              [svc]: parseInt(e.target.value) || 1
+            }))}
+            style={{ ...styles.input, width: 60, textAlign: 'center' }}
+          />
+          <span style={{ color: '#6b7280' }}>mins</span>
+        </div>
+      ))}
+     <button
+  style={{ ...styles.btn, width: '100%', marginTop: 8 }}
+  onClick={async () => {
+    await axios.post(`${API}/waittimes`, { waitTimes });
+    setShowWaitEditor(false);
+  }}
+>
+  Save ✅
+</button>
+    </div>
+  </div>
+)}
             {showLogout && (
   <div style={styles.modalOverlay}>
     <div style={styles.modalCard}>
@@ -423,6 +469,20 @@ useEffect(() => {
                    {isAdmin && (
   <div style={{ display: 'flex', gap: 8 }}>
     <button
+    onClick={() => setShowWaitEditor(true)}
+    style={{
+      padding: '8px 14px',
+      borderRadius: 8,
+      border: 'none',
+      cursor: 'pointer',
+      fontWeight: 600,
+      background: '#f1f5f9',
+      color: '#475569',
+    }}
+  >
+    ⏱️ Set Wait Time
+  </button>
+    <button
       className="btn-next"
       style={{ background: cfg.color }}
       onClick={() => callNext(s)}
@@ -488,7 +548,7 @@ useEffect(() => {
                                   <span className="you-badge">You</span>}
                               </div>
                               <div className="queue-meta">
-                                <Clock size={14} /> {waitTime(entry.position)} wait
+                              <Clock size={14} /> {waitTime(entry.position, entry.service)} wait
                               </div>
                             </div>
                             {isAdmin && (
