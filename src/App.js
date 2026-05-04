@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Clock, ChevronRight, Trash2, Loader2, CheckCircle } from 'lucide-react';
+import { Clock, ChevronRight, Trash2, Loader2, CheckCircle } from 'lucide-react';
 import { io } from 'socket.io-client';
 import './App.css';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
@@ -40,6 +40,10 @@ const styles = {
     padding: 28,
     width: 320,
     boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+  },
+  headerSub: {
+    fontSize: 14,
+    color: '#6b7280',
   }
 };
 
@@ -50,8 +54,6 @@ const SERVICE_CONFIG = {
   General: { color: 'var(--color-general)', bg: 'var(--bg-general)', emoji: '🏢' },
 };
 
-const WAIT_PER_PERSON = 5; // minutes
-
 function MainApp() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
@@ -60,22 +62,22 @@ function MainApp() {
   const [password, setPassword] = useState('');
 
 
-  
+
   const login = async () => {
-  try {
-    const { data } = await axios.post(
-      'https://smart-queue-server-aimx.onrender.com/api/auth/login',
-      { password }
-    );
-    localStorage.setItem('token', data.token);
-    setIsAdmin(true);
-    setShowLogin(false);
-    setPassword('');
-  } catch {
-    alert('Wrong password!');
-    setPassword('');
-  }
-};
+    try {
+      const { data } = await axios.post(
+        'https://smart-queue-server-aimx.onrender.com/api/auth/login',
+        { password }
+      );
+      localStorage.setItem('token', data.token);
+      setIsAdmin(true);
+      setShowLogin(false);
+      setPassword('');
+    } catch {
+      alert('Wrong password!');
+      setPassword('');
+    }
+  };
   const [queues, setQueues] = useState({});
   const [name, setName] = useState('');
   const [service, setService] = useState('Doctor');
@@ -84,23 +86,23 @@ function MainApp() {
   const [joinedId, setJoinedId] = useState(null);
   const [activeTab, setActiveTab] = useState('Doctor');
 
-const [availability, setAvailability] = useState({
-  Doctor: true, Bank: true, Pharmacy: true, General: true,
-});
-const [waitTimes, setWaitTimes] = useState({
-  Doctor: 5, Bank: 5, Pharmacy: 5, General: 5,
-});
-const [showWaitEditor, setShowWaitEditor] = useState(false);
-useEffect(() => {
-  axios.get(`${API}/availability`).then(({ data }) => setAvailability(data));
-  axios.get(`${API}/waittimes`).then(({ data }) => setWaitTimes(data));
-  socket.on('availability_updated', (data) => setAvailability(data));
-  socket.on('waittimes_updated', (data) => setWaitTimes(data));
-  return () => {
-    socket.off('availability_updated');
-    socket.off('waittimes_updated');
-  };
-}, []);
+  const [availability, setAvailability] = useState({
+    Doctor: true, Bank: true, Pharmacy: true, General: true,
+  });
+  const [waitTimes, setWaitTimes] = useState({
+    Doctor: 5, Bank: 5, Pharmacy: 5, General: 5,
+  });
+  const [showWaitEditor, setShowWaitEditor] = useState(false);
+  useEffect(() => {
+    axios.get(`${API}/availability`).then(({ data }) => setAvailability(data));
+    axios.get(`${API}/waittimes`).then(({ data }) => setWaitTimes(data));
+    socket.on('availability_updated', (data) => setAvailability(data));
+    socket.on('waittimes_updated', (data) => setWaitTimes(data));
+    return () => {
+      socket.off('availability_updated');
+      socket.off('waittimes_updated');
+    };
+  }, []);
   const fetchQueue = useCallback(async () => {
     try {
       const { data } = await axios.get(API);
@@ -161,21 +163,21 @@ useEffect(() => {
     }
   };
   const playBeep = () => {
-  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  const oscillator = audioCtx.createOscillator();
-  const gainNode = audioCtx.createGain();
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
 
-  oscillator.connect(gainNode);
-  gainNode.connect(audioCtx.destination);
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
 
-  oscillator.type = 'sine';
-  oscillator.frequency.value = 880;
-  gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
-  gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+    oscillator.type = 'sine';
+    oscillator.frequency.value = 880;
+    gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
 
-  oscillator.start(audioCtx.currentTime);
-  oscillator.stop(audioCtx.currentTime + 0.5);
-};
+    oscillator.start(audioCtx.currentTime);
+    oscillator.stop(audioCtx.currentTime + 0.5);
+  };
 
   const callNext = async (svc) => {
     playBeep();
@@ -201,384 +203,375 @@ useEffect(() => {
 
   return (
     <div className="page-container">
-      {/* Header */}
-      <header className="header">
-        <div className="header-inner">
-          <div className="logo-wrapper">
-            <div className="logo-icon">
-              <Users size={28} />
-            </div>
-            <span className="logo-text">SmartQueue</span>
+
+      {/* Wait Time Editor Modal */}
+      {showWaitEditor && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalCard}>
+            <h3 style={{ marginBottom: 16, fontSize: 18, fontWeight: 700 }}>
+              ⏱️ Set Wait Time Per Person
+            </h3>
+            {Object.keys(SERVICE_CONFIG).map(svc => (
+              <div key={svc} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                <span style={{ width: 90, fontWeight: 600 }}>
+                  {SERVICE_CONFIG[svc].emoji} {svc}
+                </span>
+                <input
+                  type="number"
+                  min={1}
+                  max={60}
+                  value={waitTimes[svc]}
+                  onChange={e => setWaitTimes(prev => ({
+                    ...prev,
+                    [svc]: parseInt(e.target.value) || 1
+                  }))}
+                  style={{ ...styles.input, width: 60, textAlign: 'center' }}
+                />
+                <span style={{ color: '#6b7280' }}>mins</span>
+              </div>
+            ))}
+            <button
+              type="button"
+              style={{ ...styles.btn, width: '100%', marginTop: 8 }}
+              onClick={async () => {
+                try {
+                  await axios.post(`${API}/waittimes`, { waitTimes });
+                  setShowWaitEditor(false);
+                } catch (err) {
+                  console.error('Error:', err.message);
+                }
+              }}
+            >
+              Save ✅
+            </button>
           </div>
-          <div style={{display:'flex', alignItems:'center', gap:12}}>
-            {showWaitEditor && (
-  <div style={styles.modalOverlay}>
-    <div style={styles.modalCard}>
-      <h3 style={{ marginBottom: 16, fontSize: 18, fontWeight: 700 }}>
-        ⏱️ Set Wait Time Per Person
-      </h3>
-      {Object.keys(SERVICE_CONFIG).map(svc => (
-        <div key={svc} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-          <span style={{ width: 90, fontWeight: 600 }}>
-            {SERVICE_CONFIG[svc].emoji} {svc}
-          </span>
-          <input
-            type="number"
-            min={1}
-            max={60}
-            value={waitTimes[svc]}
-            onChange={e => setWaitTimes(prev => ({
-              ...prev,
-              [svc]: parseInt(e.target.value) || 1
-            }))}
-            style={{ ...styles.input, width: 60, textAlign: 'center' }}
-          />
-          <span style={{ color: '#6b7280' }}>mins</span>
         </div>
-      ))}
-     <button
-  style={{ ...styles.btn, width: '100%', marginTop: 8 }}
-  onClick={async () => {
-    console.log('Save clicked');
-    console.log('waitTimes:', waitTimes);
-    try {
-      const res = await axios.post(`${API}/waittimes`, { waitTimes });
-      console.log('Response:', res.data);
-      setShowWaitEditor(false);
-    } catch (err) {
-      console.error('Error:', err.message);
-    }
-  }}
->
-  Save ✅
-</button>
-    </div>
-  </div>
-)}
-            {showLogout && (
-  <div style={styles.modalOverlay}>
-    <div style={styles.modalCard}>
-      <h3 style={{marginBottom: 8, fontSize: 18, fontWeight: 700}}>
-        🔓 Logout
-      </h3>
-      <p style={{marginBottom: 20, color: '#6b7280', fontSize: 14}}>
-        Are you sure you want to logout?
-      </p>
-      <div style={{display:'flex', gap:8}}>
-        <button
-          style={{...styles.btn, flex:1, background:'#ef4444'}}
-          onClick={() => {
-            setIsAdmin(false);
-            localStorage.removeItem('token');
-            setShowLogout(false);
-          }}
-        >
-          Yes Logout
-        </button>
-        <button
-          onClick={() => setShowLogout(false)}
-          style={{
-            flex:1, padding:'10px 20px',
-            background:'#f3f4f6',
-            border:'none', borderRadius:10,
-            cursor:'pointer', fontWeight:600
-          }}
-        >
-          Cancel
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-          {/* Admin Login Popup */}
-{showLogin && (
-  <div style={styles.modalOverlay}>
-    <div style={styles.modalCard}>
-      <h3 style={{marginBottom: 16, fontSize: 18, fontWeight: 700}}>
-        🔐 Staff Login
-      </h3>
-      <input
-        type="password"
-        placeholder="Enter staff password"
-        value={password}
-        onChange={e => setPassword(e.target.value)}
-        onKeyDown={e => e.key === 'Enter' && login()}
-        style={{...styles.input, marginBottom: 12, width: '100%'}}
-      />
-      <div style={{display:'flex', gap:8}}>
-        <button
-          style={{...styles.btn, flex:1}}
-          onClick={login}
-        >
-          Login
-        </button>
-        <button
-          onClick={() => setShowLogin(false)}
-          style={{
-            flex:1, padding:'10px 20px',
-            background:'#f3f4f6',
-            border:'none', borderRadius:10,
-            cursor:'pointer', fontWeight:600
-          }}
-        >
-          Cancel
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-  <span style={styles.headerSub}>
-    Real-time Queue Management
-  </span>
-  {!isAdmin ? (
-    <button
-      onClick={() => setShowLogin(true)}
-      style={{
-        background: 'rgba(255,255,255,0.1)',
-        border: 'none',
-        color: 'rgba(255,255,255,0.3)',
-        padding: '6px 10px',
-        borderRadius: 8,
-        cursor: 'pointer',
-        fontSize: 18
-      }}
-      title="Staff Login"
-    >
-      ⚙️
-    </button>
-  ) : (
-    <button
-      onClick={() => setShowLogout(true)}
-      style={{
-        background: 'rgba(255,255,255,0.2)',
-        border: 'none',
-        color: '#fff',
-        padding: '6px 14px',
-        borderRadius: 8,
-        cursor: 'pointer',
-        fontSize: 13,
-        fontWeight: 600
-      }}
-    >
-      🔓 Logout
-    </button>
-  )}
-</div>
+      )}
+
+      {/* Header */}
+      {showLogout && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalCard}>
+            <h3 style={{ marginBottom: 8, fontSize: 18, fontWeight: 700 }}>
+              🔓 Logout
+            </h3>
+            <p style={{ marginBottom: 20, color: '#6b7280', fontSize: 14 }}>
+              Are you sure you want to logout?
+            </p>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                style={{ ...styles.btn, flex: 1, background: '#ef4444' }}
+                onClick={() => {
+                  setIsAdmin(false);
+                  localStorage.removeItem('token');
+                  setShowLogout(false);
+                }}
+              >
+                Yes Logout
+              </button>
+              <button
+                onClick={() => setShowLogout(false)}
+                style={{
+                  flex: 1, padding: '10px 20px',
+                  background: '#f3f4f6',
+                  border: 'none', borderRadius: 10,
+                  cursor: 'pointer', fontWeight: 600
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
+      )}
+      {/* Admin Login Popup */}
+      {showLogin && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalCard}>
+            <h3 style={{ marginBottom: 16, fontSize: 18, fontWeight: 700 }}>
+              🔐 Staff Login
+            </h3>
+            <input
+              type="password"
+              placeholder="Enter staff password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && login()}
+              style={{ ...styles.input, marginBottom: 12, width: '100%' }}
+            />
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                style={{ ...styles.btn, flex: 1 }}
+                onClick={login}
+              >
+                Login
+              </button>
+              <button
+                onClick={() => setShowLogin(false)}
+                style={{
+                  flex: 1, padding: '10px 20px',
+                  background: '#f3f4f6',
+                  border: 'none', borderRadius: 10,
+                  cursor: 'pointer', fontWeight: 600
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      <header className="header">
+        <span style={styles.headerSub}>
+          Real-time Queue Management
+        </span>
+        {!isAdmin ? (
+          <button
+            onClick={() => setShowLogin(true)}
+            style={{
+              background: 'rgba(255,255,255,0.1)',
+              border: 'none',
+              color: 'rgba(255,255,255,0.3)',
+              padding: '6px 10px',
+              borderRadius: 8,
+              cursor: 'pointer',
+              fontSize: 18
+            }}
+            title="Staff Login"
+          >
+            ⚙️
+          </button>
+        ) : (
+          <button
+            onClick={() => setShowLogout(true)}
+            style={{
+              background: 'rgba(255,255,255,0.2)',
+              border: 'none',
+              color: '#fff',
+              padding: '6px 14px',
+              borderRadius: 8,
+              cursor: 'pointer',
+              fontSize: 13,
+              fontWeight: 600
+            }}
+          >
+            🔓 Logout
+          </button>
+        )}
       </header>
 
-      <main className="main-container">
-        
-        
-        {/* Join Card */}
-        <div className="glass-card">
-          <h2 className="card-title">Join a Queue</h2>
-          <div className="join-form">
-            <input
-              className="input-field"
-              placeholder="Your name"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && joinQueue()}
-            />
-            <select
-              className="select-field"
-              value={service}
-              onChange={e => setService(e.target.value)}
+    <main className="main-container">
+
+
+      {/* Join Card */}
+      <div className="glass-card">
+        <h2 className="card-title">Join a Queue</h2>
+        <div className="join-form">
+          <input
+            className="input-field"
+            placeholder="Your name"
+            value={name}
+            onChange={e => setName(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && joinQueue()}
+          />
+          <select
+            className="select-field"
+            value={service}
+            onChange={e => setService(e.target.value)}
+          >
+            {Object.keys(SERVICE_CONFIG).map(s => (
+              <option key={s}>{s}</option>
+            ))}
+          </select>
+          <button
+            className="btn-primary"
+            onClick={joinQueue}
+            disabled={loading || !availability[service]}
+          >
+            {loading ? <Loader2 size={20} style={{ animation: 'spin 1s linear infinite' }} />
+              : !availability[service] ? '🔴 Unavailable' : 'Join Queue'}
+          </button>
+        </div>
+        <AnimatePresence>
+          {joinedId && (
+            <motion.div
+              initial={{ opacity: 0, y: -10, height: 0 }}
+              animate={{ opacity: 1, y: 0, height: 'auto' }}
+              exit={{ opacity: 0, y: -10, height: 0 }}
+              className="success-banner"
             >
-              {Object.keys(SERVICE_CONFIG).map(s => (
-                <option key={s}>{s}</option>
-              ))}
-            </select>
+              <CheckCircle size={20} /> You're in the queue!
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+      {myTicket && (
+        <div style={styles.ticketCard}>
+          🎟️ Your Ticket Number
+          <div style={styles.ticketNumber}>{myTicket}</div>
+          <div style={{ fontSize: 12, color: '#6b7280' }}>
+            Please wait for your number to be called
+          </div>
+        </div>
+      )}
+
+      {/* Service Tabs */}
+      <div className="tabs-container">
+        {Object.keys(SERVICE_CONFIG).map(s => {
+          const cfg = SERVICE_CONFIG[s];
+          const isActive = activeTab === s;
+          return (
             <button
-  className="btn-primary"
-  onClick={joinQueue}
-  disabled={loading || !availability[service]}
->
-  {loading ? <Loader2 size={20} style={{ animation: 'spin 1s linear infinite' }} /> 
-  : !availability[service] ? '🔴 Unavailable' : 'Join Queue'}
-</button>
-          </div>
-          <AnimatePresence>
-            {joinedId && (
-              <motion.div
-                initial={{ opacity: 0, y: -10, height: 0 }}
-                animate={{ opacity: 1, y: 0, height: 'auto' }}
-                exit={{ opacity: 0, y: -10, height: 0 }}
-                className="success-banner"
-              >
-                <CheckCircle size={20} /> You're in the queue!
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-        {myTicket && (
-          <div style={styles.ticketCard}>
-            🎟️ Your Ticket Number
-            <div style={styles.ticketNumber}>{myTicket}</div>
-            <div style={{ fontSize: 12, color: '#6b7280' }}>
-              Please wait for your number to be called
-            </div>
-          </div>
-        )}
+              key={s}
+              onClick={() => setActiveTab(s)}
+              className={`tab-btn ${isActive ? 'active' : ''} ${!availability[s] ? 'tab-disabled' : ''}`}
+              style={isActive ? { color: cfg.color } : {}}
+            >
+              {cfg.emoji} {s}
+              <span className="tab-badge">
+                {(queues[s] || []).length}
+              </span>
+            </button>
+          );
+        })}
+      </div>
 
-        {/* Service Tabs */}
-        <div className="tabs-container">
-          {Object.keys(SERVICE_CONFIG).map(s => {
-            const cfg = SERVICE_CONFIG[s];
-            const isActive = activeTab === s;
-            return (
-              <button
-                key={s}
-                onClick={() => setActiveTab(s)}
-                className={`tab-btn ${isActive ? 'active' : ''} ${!availability[s] ? 'tab-disabled' : ''}`}
-                style={isActive ? { color: cfg.color } : {}}
-              >
-                {cfg.emoji} {s}
-                <span className="tab-badge">
-                  {(queues[s] || []).length}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+      {/* Active Service Panel */}
+      <AnimatePresence mode="wait">
+        {Object.keys(SERVICE_CONFIG).map(s => {
+          if (s !== activeTab) return null;
+          const cfg = SERVICE_CONFIG[s];
+          const list = queues[s] || [];
+          const nowServing = serving[s];
 
-        {/* Active Service Panel */}
-        <AnimatePresence mode="wait">
-          {Object.keys(SERVICE_CONFIG).map(s => {
-            if (s !== activeTab) return null;
-            const cfg = SERVICE_CONFIG[s];
-            const list = queues[s] || [];
-            const nowServing = serving[s];
-
-            return (
-              <motion.div
-                key={s}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.2 }}
-                style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}
-              >
-                {/* Now Serving */}
-                <div className="serving-card" style={{ borderColor: cfg.color, color: cfg.color }}>
-                  <div className="serving-header">
-                    <div className="serving-label">
-                      {cfg.emoji} Now Serving — {s}
-                    </div>
-                  </div>
-                  <div className="serving-content">
-                    {nowServing ? (
-                      <div className="serving-name">{nowServing.name}</div>
-                    ) : (
-                      <div className="serving-empty">No one being served yet</div>
-                    )}
-                   {isAdmin && (
-  <div style={{ display: 'flex', gap: 8 }}>
-    <button
-    onClick={() => setShowWaitEditor(true)}
-    style={{
-      padding: '8px 14px',
-      borderRadius: 8,
-      border: 'none',
-      cursor: 'pointer',
-      fontWeight: 600,
-      background: '#f1f5f9',
-      color: '#475569',
-    }}
-  >
-    ⏱️ Set Wait Time
-  </button>
-    <button
-      className="btn-next"
-      style={{ background: cfg.color }}
-      onClick={() => callNext(s)}
-    >
-      Call Next <ChevronRight size={16} />
-    </button>
-    <button
-      onClick={() => toggleAvailability(s)}
-      style={{
-        padding: '8px 14px',
-        borderRadius: 8,
-        border: 'none',
-        cursor: 'pointer',
-        fontWeight: 600,
-        background: availability[s] ? '#fee2e2' : '#dcfce7',
-        color: availability[s] ? '#ef4444' : '#16a34a',
-      }}
-    >
-      {availability[s] ? '🔴 Mark Unavailable' : '🟢 Mark Available'}
-    </button>
-  </div>
-)}
+          return (
+            <motion.div
+              key={s}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.2 }}
+              style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}
+            >
+              {/* Now Serving */}
+              <div className="serving-card" style={{ borderColor: cfg.color, color: cfg.color }}>
+                <div className="serving-header">
+                  <div className="serving-label">
+                    {cfg.emoji} Now Serving — {s}
                   </div>
                 </div>
-
-                {/* Queue List */}
-                <div className="glass-card" style={{ padding: '24px' }}>
-                  <h3 className="card-title">
-                    Queue List
-                    <span className="badge">
-                      {list.length} waiting
-                    </span>
-                  </h3>
-
-                  {list.length === 0 ? (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="empty-state">
-                      Queue is empty 🎉
-                    </motion.div>
+                <div className="serving-content">
+                  {nowServing ? (
+                    <div className="serving-name">{nowServing.name}</div>
                   ) : (
-                    <motion.div layout className="queue-list">
-                      <AnimatePresence>
-                        {list.map((entry) => (
-                          <motion.div
-                            layout
-                            key={entry._id}
-                            initial={{ opacity: 0, scale: 0.95, x: -10 }}
-                            animate={{ opacity: 1, scale: 1, x: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, x: 20 }}
-                            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-                            className="queue-item"
-                            style={{
-                              background: entry._id === joinedId ? cfg.bg : '#fff',
-                              borderLeftColor: entry._id === joinedId ? cfg.color : 'transparent',
-                            }}
-                          >
-                            <div className="queue-pos" style={{ background: cfg.color }}>
-                              #{entry.position}
-                            </div>
-                            <div className="queue-info">
-                              <div className="queue-name">
-                                {entry.name}
-                                {entry._id === joinedId &&
-                                  <span className="you-badge">You</span>}
-                              </div>
-                              <div className="queue-meta">
-                              <Clock size={14} /> {waitTime(entry.position, entry.service)} wait
-                              </div>
-                            </div>
-                            {isAdmin && (
-                              <button
-                                className="btn-delete"
-                                onClick={() => cancelEntry(entry._id)}
-                                title="Cancel"
-                              >
-                                <Trash2 size={18} />
-                              </button>
-                            )}
-                          </motion.div>
-                        ))}
-                      </AnimatePresence>
-                    </motion.div>
+                    <div className="serving-empty">No one being served yet</div>
+                  )}
+                  {isAdmin && (
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button
+                        onClick={() => setShowWaitEditor(true)}
+                        style={{
+                          padding: '8px 14px',
+                          borderRadius: 8,
+                          border: 'none',
+                          cursor: 'pointer',
+                          fontWeight: 600,
+                          background: '#f1f5f9',
+                          color: '#475569',
+                        }}
+                      >
+                        ⏱️ Set Wait Time
+                      </button>
+                      <button
+                        className="btn-next"
+                        style={{ background: cfg.color }}
+                        onClick={() => callNext(s)}
+                      >
+                        Call Next <ChevronRight size={16} />
+                      </button>
+                      <button
+                        onClick={() => toggleAvailability(s)}
+                        style={{
+                          padding: '8px 14px',
+                          borderRadius: 8,
+                          border: 'none',
+                          cursor: 'pointer',
+                          fontWeight: 600,
+                          background: availability[s] ? '#fee2e2' : '#dcfce7',
+                          color: availability[s] ? '#ef4444' : '#16a34a',
+                        }}
+                      >
+                        {availability[s] ? '🔴 Mark Unavailable' : '🟢 Mark Available'}
+                      </button>
+                    </div>
                   )}
                 </div>
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
-      </main>
-    </div>
+              </div>
+
+              {/* Queue List */}
+              <div className="glass-card" style={{ padding: '24px' }}>
+                <h3 className="card-title">
+                  Queue List
+                  <span className="badge">
+                    {list.length} waiting
+                  </span>
+                </h3>
+
+                {list.length === 0 ? (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="empty-state">
+                    Queue is empty 🎉
+                  </motion.div>
+                ) : (
+                  <motion.div layout className="queue-list">
+                    <AnimatePresence>
+                      {list.map((entry) => (
+                        <motion.div
+                          layout
+                          key={entry._id}
+                          initial={{ opacity: 0, scale: 0.95, x: -10 }}
+                          animate={{ opacity: 1, scale: 1, x: 0 }}
+                          exit={{ opacity: 0, scale: 0.95, x: 20 }}
+                          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                          className="queue-item"
+                          style={{
+                            background: entry._id === joinedId ? cfg.bg : '#fff',
+                            borderLeftColor: entry._id === joinedId ? cfg.color : 'transparent',
+                          }}
+                        >
+                          <div className="queue-pos" style={{ background: cfg.color }}>
+                            #{entry.position}
+                          </div>
+                          <div className="queue-info">
+                            <div className="queue-name">
+                              {entry.name}
+                              {entry._id === joinedId &&
+                                <span className="you-badge">You</span>}
+                            </div>
+                            <div className="queue-meta">
+                              <Clock size={14} /> {waitTime(entry.position, entry.service)} wait
+                            </div>
+                          </div>
+                          {isAdmin && (
+                            <button
+                              className="btn-delete"
+                              onClick={() => cancelEntry(entry._id)}
+                              title="Cancel"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          )}
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                  </motion.div>
+                )}
+              </div>
+            </motion.div>
+          );
+        })}
+      </AnimatePresence>
+    </main>
+    </div >
   );
 }
 
