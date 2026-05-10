@@ -335,7 +335,9 @@ function MainApp() {
               padding: '6px 10px',
               borderRadius: 8,
               cursor: 'pointer',
-              fontSize: 18
+              fontSize: 18,
+              position: 'absolute',
+              right: 24
             }}
             title="Staff Login"
           >
@@ -352,7 +354,9 @@ function MainApp() {
               borderRadius: 8,
               cursor: 'pointer',
               fontSize: 13,
-              fontWeight: 600
+              fontWeight: 600,
+              position: 'absolute',
+              right: 24
             }}
           >
             🔓 Logout

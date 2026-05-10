@@ -67,11 +67,15 @@ body {
 .header {
   background-color: #ffffff;
   border-bottom: 1px solid var(--border-color);
-  padding: 16px 0;
+  padding: 16px 24px;
   position: sticky;
   top: 0;
   z-index: 100;
   box-shadow: var(--shadow-sm);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
 }
 
 .header-inner {
