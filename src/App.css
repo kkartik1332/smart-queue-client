@@ -108,9 +108,9 @@ body {
 }
 
 .header-sub {
-  font-size: 14px;
-  color: var(--text-muted);
-  font-weight: 500;
+  font-size: 20px;
+  color: var(--text-main);
+  font-weight: 700;
 }
 
 /* Main Content */
