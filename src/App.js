@@ -234,11 +234,14 @@ function MainApp() {
               type="button"
               style={{ ...styles.btn, width: '100%', marginTop: 8 }}
               onClick={async () => {
+                 alert('Button clicked!');
                 try {
                   await axios.post(`${API}/waittimes`, { waitTimes });
+                   alert('Success: ' + JSON.stringify(res.data));
                   setShowWaitEditor(false);
                 } catch (err) {
-                  console.error('Error:', err.message);
+                   alert('Error: ' + err.message);
+                  
                 }
               }}
             >
