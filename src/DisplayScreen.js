@@ -9,6 +9,7 @@ export default function DisplayScreen() {
   const [availability, setAvailability] = useState({
     Doctor: true, Bank: true, Pharmacy: true, General: true,
   });
+  const servingRef = React.useRef({});
   const [serving, setServing] = useState({});
   const [queues, setQueues] = useState({});
   const [time, setTime] = useState(new Date());
@@ -16,30 +17,40 @@ export default function DisplayScreen() {
   Doctor: 5, Bank: 5, Pharmacy: 5, General: 5,
 });
 
-  const fetchQueue = async () => {
-    try {
-      const { data } = await axios.get(API);
-      const grouped = {};
-      const currentlyServing = {};
-      ['Doctor','Bank','Pharmacy','General'].forEach(s => {
-        grouped[s] = [];
-        currentlyServing[s] = null;
-      });
-      data.forEach(entry => {
-        if (entry.position === 0) {
-          currentlyServing[entry.service] = entry;
-        } else {
-          if (!grouped[entry.service]) grouped[entry.service] = [];
-          grouped[entry.service].push(entry);
-        }
-      });
-      setServing(currentlyServing);
-      setQueues(grouped);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+ const fetchQueue = async () => {
+  try {
+    const { data } = await axios.get(API);
+    const grouped = {};
+    const currentlyServing = {};
+    ['Doctor','Bank','Pharmacy','General'].forEach(s => {
+      grouped[s] = [];
+      currentlyServing[s] = null;
+    });
+    data.forEach(entry => {
+      if (entry.position === 0) {
+        currentlyServing[entry.service] = entry;
+      } else {
+        if (!grouped[entry.service]) grouped[entry.service] = [];
+        grouped[entry.service].push(entry);
+      }
+    });
 
+    // 🔊 Speak when new token is called
+    Object.keys(currentlyServing).forEach(s => {
+      const prev = servingRef.current[s];
+      const current = currentlyServing[s];
+      if (current && (!prev || prev.ticketNo !== current.ticketNo)) {
+        speak(`Token number ${current.ticketNo}, please proceed to the ${s} counter`);
+      }
+    });
+
+    setServing(currentlyServing);
+    servingRef.current = currentlyServing;
+    setQueues(grouped);
+  } catch (err) {
+    console.error(err);
+  }
+};
  useEffect(() => {
   fetchQueue();
   socket.on('queue_updated', fetchQueue);
@@ -62,6 +73,14 @@ export default function DisplayScreen() {
     Pharmacy: { color: '#10b981', emoji: '💊' },
     General:  { color: '#f59e0b', emoji: '🏢' },
   };
+  const speak = (text) => {
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'en-IN';
+  utterance.rate = 0.9;
+  utterance.pitch = 1;
+  utterance.volume = 1;
+  window.speechSynthesis.speak(utterance);
+};
 
   return (
     <div style={styles.page}>
