@@ -236,12 +236,11 @@ function MainApp() {
               onClick={async () => {
                  alert('Button clicked!');
                 try {
-                  await axios.post(`${API}/waittimes`, { waitTimes });
-                   alert('Success: ' + JSON.stringify(res.data));
+                  const res = await axios.post(`${API}/waittimes`, { waitTimes });
+                  alert('Success: ' + JSON.stringify(res.data));
                   setShowWaitEditor(false);
                 } catch (err) {
                    alert('Error: ' + err.message);
-                  
                 }
               }}
             >
