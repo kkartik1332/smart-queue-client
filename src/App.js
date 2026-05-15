@@ -145,7 +145,6 @@ setJoinedId(data._id);
 setMyTicket(data.ticketNo);
 setName('');
 fetchQueue();
-printTicket(data); // 🖨️ auto print ticket
     } catch (err) {
       console.error(err);
     } finally {
