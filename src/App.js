@@ -7,6 +7,7 @@ import './App.css';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import DisplayScreen from './DisplayScreen';
 import Analytics from './Analytics';
+import { jsPDF } from 'jspdf';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-queue-server-aimx.onrender.com';
 const API = `${API_BASE_URL}/api/queue`;
@@ -139,11 +140,12 @@ function MainApp() {
     if (!name.trim()) return;
     setLoading(true);
     try {
-      const { data } = await axios.post(API, { name, service });
-      setJoinedId(data._id);
-      setMyTicket(data.ticketNo);
-      setName('');
-      fetchQueue();
+     const { data } = await axios.post(API, { name, service });
+setJoinedId(data._id);
+setMyTicket(data.ticketNo);
+setName('');
+fetchQueue();
+printTicket(data); // 🖨️ auto print ticket
     } catch (err) {
       console.error(err);
     } finally {
@@ -163,6 +165,51 @@ function MainApp() {
       alert('Failed to update availability');
     }
   };
+  const printTicket = (ticket) => {
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: [80, 120] // small ticket size
+  });
+
+  // Background
+  doc.setFillColor(79, 70, 229);
+  doc.rect(0, 0, 80, 40, 'F');
+
+  // Hospital name
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.text('SmartQueue', 40, 15, { align: 'center' });
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Hospital Queue System', 40, 22, { align: 'center' });
+
+  // Ticket number
+  doc.setTextColor(79, 70, 229);
+  doc.setFontSize(36);
+  doc.setFont('helvetica', 'bold');
+  doc.text(ticket.ticketNo, 40, 65, { align: 'center' });
+
+  // Details
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(50, 50, 50);
+  doc.text(`Name: ${ticket.name}`, 40, 78, { align: 'center' });
+  doc.text(`Service: ${ticket.service}`, 40, 86, { align: 'center' });
+  doc.text(`Position: #${ticket.position}`, 40, 94, { align: 'center' });
+
+  // Date
+  doc.setFontSize(9);
+  doc.setTextColor(150, 150, 150);
+  doc.text(new Date().toLocaleString(), 40, 108, { align: 'center' });
+
+  // Footer
+  doc.setFontSize(9);
+  doc.text('Please wait for your number to be called', 40, 116, { align: 'center' });
+
+  doc.save(`ticket-${ticket.ticketNo}.pdf`);
+};
   const playBeep = () => {
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const oscillator = audioCtx.createOscillator();
@@ -429,14 +476,34 @@ function MainApp() {
         </AnimatePresence>
       </div>
       {myTicket && (
-        <div style={styles.ticketCard}>
-          🎟️ Your Ticket Number
-          <div style={styles.ticketNumber}>{myTicket}</div>
-          <div style={{ fontSize: 12, color: '#6b7280' }}>
-            Please wait for your number to be called
-          </div>
-        </div>
-      )}
+  <div style={styles.ticketCard}>
+    🎟️ Your Ticket Number
+    <div style={styles.ticketNumber}>{myTicket}</div>
+    <div style={{ fontSize: 12, color: '#6b7280' }}>
+      Please wait for your number to be called
+    </div>
+    <button
+      onClick={() => {
+        const queue = queues[service] || [];
+        const myEntry = queue.find(e => e._id === joinedId);
+        if (myEntry) printTicket(myEntry);
+      }}
+      style={{
+        marginTop: 12,
+        background: 'rgba(255,255,255,0.2)',
+        border: 'none',
+        color: '#fff',
+        padding: '8px 20px',
+        borderRadius: 8,
+        cursor: 'pointer',
+        fontWeight: 600,
+        fontSize: 14,
+      }}
+    >
+      🖨️ Print Ticket
+    </button>
+  </div>
+)}
 
       {/* Service Tabs */}
       <div className="tabs-container">
