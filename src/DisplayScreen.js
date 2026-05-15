@@ -9,10 +9,12 @@ export default function DisplayScreen() {
   const [availability, setAvailability] = useState({
     Doctor: true, Bank: true, Pharmacy: true, General: true,
   });
-  const servingRef = React.useRef({});
+  
   const [serving, setServing] = useState({});
   const [queues, setQueues] = useState({});
   const [time, setTime] = useState(new Date());
+  const servingRef = React.useRef({});
+  const [activated, setActivated] = useState(false);
   const [waitTimes, setWaitTimes] = useState({
   Doctor: 5, Bank: 5, Pharmacy: 5, General: 5,
 });
@@ -74,6 +76,7 @@ export default function DisplayScreen() {
     General:  { color: '#f59e0b', emoji: '🏢' },
   };
   const speak = (text) => {
+  if (!activated) return; // don't speak until activated
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = 'en-IN';
   utterance.rate = 0.9;
@@ -84,6 +87,31 @@ export default function DisplayScreen() {
 
   return (
     <div style={styles.page}>
+      {!activated && (
+  <div
+    onClick={() => setActivated(true)}
+    style={{
+      position: 'fixed',
+      top: 0, left: 0,
+      width: '100%', height: '100%',
+      background: 'rgba(0,0,0,0.85)',
+      zIndex: 9999,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      cursor: 'pointer',
+    }}
+  >
+    <div style={{ fontSize: 64 }}>🔊</div>
+    <div style={{ color: '#fff', fontSize: 28, fontWeight: 700, marginTop: 16 }}>
+      Tap anywhere to activate voice
+    </div>
+    <div style={{ color: '#94a3b8', fontSize: 16, marginTop: 8 }}>
+      Required by browser for audio
+    </div>
+  </div>
+)}
       <div style={styles.header}>
         <div>
           <div style={styles.hospitalName}>🏥 SmartQueue</div>

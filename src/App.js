@@ -6,6 +6,7 @@ import { io } from 'socket.io-client';
 import './App.css';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import DisplayScreen from './DisplayScreen';
+import Analytics from './Analytics';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-queue-server-aimx.onrender.com';
 const API = `${API_BASE_URL}/api/queue`;
@@ -271,6 +272,7 @@ function MainApp() {
               >
                 Yes Logout
               </button>
+
               <button
                 onClick={() => setShowLogout(false)}
                 style={{
@@ -346,23 +348,38 @@ function MainApp() {
             ⚙️
           </button>
         ) : (
-          <button
-            onClick={() => setShowLogout(true)}
-            style={{
-              background: 'rgba(255,255,255,0.2)',
-              border: 'none',
-              color: '#fff',
-              padding: '6px 14px',
-              borderRadius: 8,
-              cursor: 'pointer',
-              fontSize: 13,
-              fontWeight: 600,
-              position: 'absolute',
-              right: 24
-            }}
-          >
-            🔓 Logout
-          </button>
+          <>
+            <button
+              onClick={() => window.open('/analytics', '_blank')}
+              style={{
+                background: 'rgba(255,255,255,0.2)',
+                border: 'none',
+                color: '#fff',
+                padding: '6px 14px',
+                borderRadius: 8,
+                cursor: 'pointer',
+                fontSize: 13,
+                fontWeight: 600
+              }}
+            >
+              📊 Analytics
+            </button>
+            <button
+              onClick={() => setShowLogout(true)}
+              style={{
+                background: 'rgba(255,255,255,0.2)',
+                border: 'none',
+                color: '#fff',
+                padding: '6px 14px',
+                borderRadius: 8,
+                cursor: 'pointer',
+                fontSize: 13,
+                fontWeight: 600
+              }}
+            >
+              🔓 Logout
+            </button>
+          </>
         )}
       </header>
 
@@ -585,9 +602,10 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<MainApp />} />
-        <Route path="/display" element={<DisplayScreen />} />
-      </Routes>
+  <Route path="/" element={<MainApp />} />
+  <Route path="/display" element={<DisplayScreen />} />
+  <Route path="/analytics" element={<Analytics />} />
+</Routes>
     </BrowserRouter>
   );
 }
