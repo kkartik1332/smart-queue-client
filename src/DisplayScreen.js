@@ -82,7 +82,11 @@ const speak = (text) => {
     <div style={styles.page}>
       {!activated && (
   <div
-onClick={() => { setActivated(true); activatedRef.current = true; }}
+onClick={() => {
+      activatedRef.current = true;
+      setActivated(true);
+      speak('Voice activated');
+    }}
     style={{
       position: 'fixed',
       top: 0, left: 0,
