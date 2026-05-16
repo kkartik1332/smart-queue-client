@@ -14,10 +14,21 @@ export default function DisplayScreen() {
   const [queues, setQueues] = useState({});
   const [time, setTime] = useState(new Date());
   const servingRef = React.useRef({});
+  const activatedRef = React.useRef(false);
   const [activated, setActivated] = useState(false);
   const [waitTimes, setWaitTimes] = useState({
   Doctor: 5, Bank: 5, Pharmacy: 5, General: 5,
 });
+const speak = (text) => {
+  if (!activatedRef.current) return; // use ref instead of state
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'en-IN';
+  utterance.rate = 0.9;
+  utterance.pitch = 1;
+  utterance.volume = 1;
+  window.speechSynthesis.speak(utterance);
+};
+
 
  const fetchQueue = async () => {
   try {
@@ -34,15 +45,6 @@ export default function DisplayScreen() {
       } else {
         if (!grouped[entry.service]) grouped[entry.service] = [];
         grouped[entry.service].push(entry);
-      }
-    });
-
-    // 🔊 Speak when new token is called
-    Object.keys(currentlyServing).forEach(s => {
-      const prev = servingRef.current[s];
-      const current = currentlyServing[s];
-      if (current && (!prev || prev.ticketNo !== current.ticketNo)) {
-        speak(`Token number ${current.ticketNo}, please proceed to the ${s} counter`);
       }
     });
 
@@ -75,21 +77,12 @@ export default function DisplayScreen() {
     Pharmacy: { color: '#10b981', emoji: '💊' },
     General:  { color: '#f59e0b', emoji: '🏢' },
   };
-  const speak = (text) => {
-  if (!activated) return; // don't speak until activated
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = 'en-IN';
-  utterance.rate = 0.9;
-  utterance.pitch = 1;
-  utterance.volume = 1;
-  window.speechSynthesis.speak(utterance);
-};
 
   return (
     <div style={styles.page}>
       {!activated && (
   <div
-    onClick={() => setActivated(true)}
+onClick={() => { setActivated(true); activatedRef.current = true; }}
     style={{
       position: 'fixed',
       top: 0, left: 0,
