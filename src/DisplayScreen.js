@@ -15,19 +15,21 @@ export default function DisplayScreen() {
   const [time, setTime] = useState(new Date());
   const servingRef = React.useRef({});
   const activatedRef = React.useRef(false);
+  const lastAnnouncedRef = React.useRef({});
   const [activated, setActivated] = useState(false);
   const [waitTimes, setWaitTimes] = useState({
-  Doctor: 5, Bank: 5, Pharmacy: 5, General: 5,
-});
-const speak = (text) => {
-  if (!activatedRef.current) return; // use ref instead of state
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = 'en-IN';
-  utterance.rate = 0.9;
-  utterance.pitch = 1;
-  utterance.volume = 1;
-  window.speechSynthesis.speak(utterance);
-};
+    Doctor: 5, Bank: 5, Pharmacy: 5, General: 5,
+  });
+
+  const speak = (text) => {
+    if (!activatedRef.current) return; // use ref instead of state
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-IN';
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+    window.speechSynthesis.speak(utterance);
+  };
 
 
  const fetchQueue = async () => {
@@ -70,6 +72,22 @@ const speak = (text) => {
     clearInterval(timer);
   };
 }, []);
+
+  useEffect(() => {
+    if (!activatedRef.current) return;
+
+    Object.keys(SERVICE_CONFIG).forEach((service) => {
+      const current = serving[service];
+      const lastTicket = lastAnnouncedRef.current[service];
+      const isAvailable = availability[service];
+
+      if (!isAvailable || !current || !current.ticketNo) return;
+      if (lastTicket === current.ticketNo) return;
+
+      lastAnnouncedRef.current[service] = current.ticketNo;
+      speak(`${service} now serving ticket number ${current.ticketNo}`);
+    });
+  }, [serving, availability]);
 
   const SERVICE_CONFIG = {
     Doctor:   { color: '#6366f1', emoji: '🩺' },
